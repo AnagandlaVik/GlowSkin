@@ -416,7 +416,9 @@ body.dark .tip-text { color: var(--night-text); }
 </div>
  
 <script>
-const TODAY = new Date().toISOString().split('T')[0];
+const TODAY = new Date().toLocaleDateString('en-CA', {
+  timeZone: 'America/New_York'
+});
 const BOTTLE_OZ = 40;
 const GOAL_OZ = 169;
 const BOTTLE_FILLS = 5;

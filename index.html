@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Glow & Go Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #fdf6ef;
+  --blush: #f2c4b0;
+  --rose: #d4856a;
+  --deep: #3a2a2a;
+  --text: #5a3e3e;
+  --muted: #b09090;
+  --mint: #a8d5c2;
+  --mint-dark: #5aab8a;
+  --gold: #c9a96e;
+  --card: #fff8f3;
+  --water: #5bb8f5;
+  --water-dark: #1a7fd4;
+  --night: #0f1923;
+  --night-card: #1a2535;
+  --night-accent: #a07cc5;
+  --night-text: #e8d8f5;
+  --night-muted: #6a7a90;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+body.dark { background: var(--night); color: var(--night-text); }
+ 
+header {
+  background: linear-gradient(135deg, #f7ddd0 0%, #fce8dc 60%, #f2c4b0 100%);
+  padding: 26px 20px 18px; text-align: center; position: relative; border-bottom: 2px solid var(--blush);
+}
+body.dark header { background: linear-gradient(135deg, #1a2535 0%, #0f1923 60%, #1e2d42 100%); border-bottom: 2px solid #1e3050; }
+header h1 { font-family: 'Playfair Display', serif; font-size: 1.9rem; color: var(--rose); letter-spacing: 1px; }
+body.dark header h1 { color: #5bb8f5; }
+header .subtitle { font-size: 0.72rem; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-top: 2px; }
+.date-display { margin-top: 8px; font-size: 0.88rem; color: var(--rose); font-weight: 500; }
+body.dark .date-display { color: #5bb8f5; }
+.mode-toggle { position: absolute; top: 18px; right: 14px; background: none; border: none; font-size: 1.3rem; cursor: pointer; padding: 4px; }
+ 
+.streak-bar { display: flex; gap: 8px; padding: 12px 14px; background: var(--card); border-bottom: 1px solid #f0e0d8; overflow-x: auto; scrollbar-width: none; }
+body.dark .streak-bar { background: var(--night-card); border-bottom: 1px solid #1e2d42; }
+.streak-bar::-webkit-scrollbar { display: none; }
+.streak-pill { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.streak-dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--blush); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 600; color: var(--muted); background: white; transition: all 0.3s; }
+body.dark .streak-dot { border-color: #2a3d55; background: #1a2535; color: var(--night-muted); }
+.streak-dot.done { background: var(--mint); border-color: var(--mint-dark); color: white; }
+.streak-dot.partial { background: var(--gold); border-color: #b8862a; color: white; }
+.streak-dot.today { box-shadow: 0 0 0 3px var(--rose); }
+body.dark .streak-dot.today { box-shadow: 0 0 0 3px #5bb8f5; }
+.streak-day-label { font-size: 0.58rem; color: var(--muted); }
+ 
+.stats-row { display: flex; border-bottom: 1px solid #f0e0d8; }
+body.dark .stats-row { border-bottom: 1px solid #1e2d42; }
+.stat-box { flex: 1; text-align: center; padding: 10px 4px; border-right: 1px solid #f0e0d8; }
+body.dark .stat-box { border-right: 1px solid #1e2d42; }
+.stat-box:last-child { border-right: none; }
+.stat-num { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--rose); line-height: 1; }
+body.dark .stat-num { color: #5bb8f5; }
+.stat-label { font-size: 0.58rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+ 
+.tabs { display: flex; background: var(--card); border-bottom: 2px solid var(--blush); overflow-x: auto; scrollbar-width: none; }
+body.dark .tabs { background: var(--night-card); border-bottom: 2px solid #1e3050; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab-btn { flex-shrink: 0; padding: 11px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500; color: var(--muted); background: none; border: none; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; white-space: nowrap; }
+.tab-btn.active { color: var(--rose); border-bottom-color: var(--rose); }
+body.dark .tab-btn.active { color: #5bb8f5; border-bottom-color: #5bb8f5; }
+ 
+.panel { display: none; padding: 14px; }
+.panel.active { display: block; }
+ 
+.section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.section-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+.morning-icon { background: linear-gradient(135deg, #ffd89b, #f9a56a); }
+.night-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+.fitness-icon { background: linear-gradient(135deg, #a8d5c2, #5aab8a); }
+.water-icon { background: linear-gradient(135deg, #93d5f7, #1a7fd4); }
+.section-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--deep); }
+body.dark .section-title { color: var(--night-text); }
+.progress-mini { margin-left: auto; font-size: 0.73rem; color: var(--muted); font-weight: 600; }
+ 
+.progress-bar-wrap { background: #f0e8e0; border-radius: 10px; height: 7px; margin: 8px 0 14px; overflow: hidden; }
+body.dark .progress-bar-wrap { background: #1e2d42; }
+.progress-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--mint), var(--mint-dark)); transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
+.morning-fill { background: linear-gradient(90deg, #ffd89b, var(--gold)); }
+.night-fill { background: linear-gradient(90deg, #c084fc, #7c3aed); }
+.water-fill { background: linear-gradient(90deg, #93d5f7, #1a7fd4); }
+ 
+.check-item { display: flex; align-items: flex-start; gap: 11px; padding: 12px 13px; background: var(--card); border-radius: 13px; margin-bottom: 8px; border: 1.5px solid transparent; cursor: pointer; transition: all 0.25s; user-select: none; }
+body.dark .check-item { background: var(--night-card); border-color: #1e2d42; }
+.check-item:active { transform: scale(0.98); }
+.check-item.done { border-color: var(--mint); background: #f0faf5; opacity: 0.82; }
+body.dark .check-item.done { border-color: var(--mint-dark); background: #0d2a20; }
+.check-item.morning.done { border-color: var(--gold); background: #fff9ee; }
+body.dark .check-item.morning.done { background: #2a1e00; border-color: var(--gold); }
+.check-item.night.done { border-color: #a07cc5; background: #f5f0ff; }
+body.dark .check-item.night.done { background: #1a0e2a; border-color: #a07cc5; }
+.check-item.fitness-item.done { border-color: var(--mint-dark); background: #eaf7f2; }
+body.dark .check-item.fitness-item.done { background: #0a2a1e; border-color: var(--mint-dark); }
+ 
+.check-box { width: 23px; height: 23px; flex-shrink: 0; border-radius: 7px; border: 2px solid var(--blush); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; transition: all 0.25s; margin-top: 1px; }
+body.dark .check-box { border-color: #2a3d55; }
+.check-item.done .check-box { background: var(--mint-dark); border-color: var(--mint-dark); color: white; }
+.check-item.morning.done .check-box { background: var(--gold); border-color: var(--gold); }
+.check-item.night.done .check-box { background: #9b72cf; border-color: #9b72cf; }
+.check-item.fitness-item.done .check-box { background: var(--mint-dark); border-color: var(--mint-dark); }
+ 
+.check-content { flex: 1; min-width: 0; }
+.check-name { font-weight: 600; font-size: 0.86rem; color: var(--deep); }
+body.dark .check-name { color: var(--night-text); }
+.check-item.done .check-name { text-decoration: line-through; color: var(--muted); }
+.check-desc { font-size: 0.72rem; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+.step-badge { font-size: 0.58rem; background: var(--blush); color: var(--rose); padding: 2px 6px; border-radius: 20px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; margin-top: 3px; display: inline-block; }
+.check-item.night .step-badge { background: #e8d8f5; color: #7040a0; }
+.check-item.fitness-item .step-badge { background: #d4f0e8; color: #2a7a5a; }
+ 
+.reset-btn { display: block; width: 100%; padding: 11px; border: 2px dashed var(--blush); background: none; border-radius: 13px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; margin-top: 8px; transition: all 0.2s; }
+body.dark .reset-btn { border-color: #2a3d55; }
+.reset-btn:hover { border-color: var(--rose); color: var(--rose); }
+ 
+.complete-all-btn { display: block; width: 100%; padding: 10px; border: 1.5px solid; border-radius: 11px; font-family: 'DM Sans', sans-serif; font-size: 0.76rem; font-weight: 600; cursor: pointer; margin-bottom: 12px; transition: all 0.2s; letter-spacing: 0.5px; }
+.complete-all-morning { border-color: var(--gold); color: var(--gold); background: none; }
+.complete-all-morning:hover { background: #fff3dd; }
+.complete-all-night { border-color: #9b72cf; color: #9b72cf; background: none; }
+.complete-all-night:hover { background: #f5f0ff; }
+.complete-all-fitness { border-color: var(--mint-dark); color: var(--mint-dark); background: none; }
+.complete-all-fitness:hover { background: #eaf7f2; }
+ 
+.save-btn { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--mint), var(--mint-dark)); border: none; border-radius: 13px; color: white; font-family: 'DM Sans', sans-serif; font-size: 0.86rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+.save-btn:active { transform: scale(0.98); }
+ 
+.congrats-banner { background: linear-gradient(135deg, var(--mint), var(--mint-dark)); border-radius: 14px; padding: 12px 14px; text-align: center; color: white; font-weight: 600; margin-bottom: 12px; display: none; font-size: 0.85rem; }
+.congrats-banner.show { display: block; animation: pop 0.4s ease; }
+@keyframes pop { 0%{transform:scale(0.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+ 
+.divider { border: none; border-top: 1px dashed var(--blush); margin: 16px 0 14px; }
+body.dark .divider { border-top-color: #1e2d42; }
+ 
+/* ══ WATER ══ */
+.wake-up-card { background: linear-gradient(135deg, #fff3e0, #ffe0b2); border: 1.5px solid #ffb74d; border-radius: 14px; padding: 13px 14px; margin-bottom: 14px; display: flex; gap: 10px; align-items: flex-start; }
+body.dark .wake-up-card { background: linear-gradient(135deg, #2a1e00, #1a1400); border-color: #7a5a00; }
+.wake-up-icon { font-size: 1.6rem; flex-shrink: 0; }
+.wake-up-title { font-weight: 700; font-size: 0.85rem; color: #e65100; margin-bottom: 3px; }
+body.dark .wake-up-title { color: #ffb74d; }
+.wake-up-text { font-size: 0.74rem; color: #8a4a00; line-height: 1.5; }
+body.dark .wake-up-text { color: #c9902a; }
+ 
+.water-hero { background: linear-gradient(135deg, #e8f6ff, #cceeff); border-radius: 18px; padding: 18px; margin-bottom: 14px; border: 1.5px solid #93d5f7; }
+body.dark .water-hero { background: linear-gradient(135deg, #0d2035, #0a1828); border-color: #1a4060; }
+ 
+.water-total-display { text-align: center; margin-bottom: 14px; }
+.water-oz-big { font-family: 'Playfair Display', serif; font-size: 3rem; color: var(--water-dark); line-height: 1; }
+body.dark .water-oz-big { color: var(--water); }
+.water-oz-sub { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px; }
+.water-oz-sub span { color: var(--water-dark); font-weight: 700; }
+body.dark .water-oz-sub span { color: var(--water); }
+ 
+.bottles-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 10px 0 6px; }
+.bottle-unit { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: transform 0.2s; }
+.bottle-unit:active { transform: scale(0.9); }
+.bottle-svg { width: 38px; height: 54px; }
+.bottle-label { font-size: 0.6rem; font-weight: 700; color: var(--muted); }
+.bottle-label.filled { color: var(--water-dark); }
+body.dark .bottle-label.filled { color: var(--water); }
+ 
+.water-schedule-title { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 9px; }
+.schedule-item { display: flex; align-items: center; gap: 9px; padding: 9px 11px; border-radius: 11px; background: white; margin-bottom: 7px; border: 1.5px solid transparent; cursor: pointer; transition: all 0.2s; }
+body.dark .schedule-item { background: #1a2535; border-color: #1e2d42; }
+.schedule-item.done { background: #e8f6ff; border-color: #93d5f7; }
+body.dark .schedule-item.done { background: #0a1828; border-color: #1a5080; }
+.schedule-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #93d5f7; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; transition: all 0.2s; }
+.schedule-item.done .schedule-check { background: var(--water-dark); border-color: var(--water-dark); color: white; }
+body.dark .schedule-item.done .schedule-check { background: var(--water); border-color: var(--water); color: #0a1828; }
+.schedule-time { font-size: 0.7rem; font-weight: 700; color: var(--water-dark); width: 52px; flex-shrink: 0; }
+body.dark .schedule-time { color: var(--water); }
+.schedule-text { font-size: 0.76rem; flex: 1; color: var(--text); }
+body.dark .schedule-text { color: var(--night-text); }
+.schedule-badge { font-size: 0.6rem; background: #d4eeff; color: var(--water-dark); padding: 2px 7px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
+body.dark .schedule-badge { background: #0d2035; color: var(--water); }
+.schedule-item.done .schedule-text { color: var(--muted); }
+ 
+/* ══ FITNESS ══ */
+.fitness-section { margin-bottom: 16px; }
+.fitness-section-title { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.fitness-section-title::after { content: ''; flex: 1; height: 1px; background: var(--blush); }
+body.dark .fitness-section-title::after { background: #1e2d42; }
+ 
+.fitness-log-box { background: var(--card); border-radius: 13px; padding: 12px; border: 1.5px solid #f0e0d8; }
+body.dark .fitness-log-box { background: var(--night-card); border-color: #1e2d42; }
+.fitness-log-box label { font-size: 0.7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px; }
+.fitness-input { width: 100%; border: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 0.86rem; color: var(--text); outline: none; resize: none; }
+body.dark .fitness-input { color: var(--night-text); }
+.fitness-input::placeholder { color: var(--muted); }
+ 
+.workout-types { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.wtype-btn { padding: 5px 11px; border-radius: 20px; border: 1.5px solid var(--blush); background: none; font-size: 0.72rem; font-family: 'DM Sans', sans-serif; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+body.dark .wtype-btn { border-color: #2a3d55; color: var(--night-muted); }
+.wtype-btn.active { background: var(--mint-dark); border-color: var(--mint-dark); color: white; }
+ 
+/* HISTORY & TIPS */
+.history-entry { background: var(--card); border-radius: 13px; padding: 12px 13px; margin-bottom: 9px; border: 1px solid #f0e0d8; }
+body.dark .history-entry { background: var(--night-card); border-color: #1e2d42; }
+.history-date { font-family: 'Playfair Display', serif; font-size: 0.88rem; color: var(--rose); margin-bottom: 5px; }
+body.dark .history-date { color: #5bb8f5; }
+.history-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+.history-pill { font-size: 0.64rem; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
+.pill-morning { background: #fff3dd; color: #b8862a; }
+.pill-night { background: #f0e8ff; color: #7040a0; }
+.pill-fitness { background: #e8f7f2; color: #3a8a6a; }
+.pill-water { background: #e0f4ff; color: #1a6090; }
+.pill-miss { background: #fee; color: #c05050; }
+ 
+.tip-card { background: linear-gradient(135deg, #fff3f0, #fff8f3); border: 1.5px solid var(--blush); border-radius: 13px; padding: 12px 13px; margin-bottom: 9px; }
+body.dark .tip-card { background: linear-gradient(135deg, #1a0e15, #120a1a); border-color: #2a3d55; }
+.tip-tag { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--rose); margin-bottom: 4px; }
+body.dark .tip-tag { color: #5bb8f5; }
+.tip-text { font-size: 0.78rem; line-height: 1.5; color: var(--text); }
+body.dark .tip-text { color: var(--night-text); }
+ 
+.empty-state { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 0.83rem; }
+.empty-state .emoji { font-size: 2.2rem; display: block; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+ 
+<header>
+  <h1>✨ Glow & Go</h1>
+  <div class="subtitle">Skincare · Fitness · Water · Tracker</div>
+  <div class="date-display" id="dateDisplay"></div>
+  <button class="mode-toggle" onclick="toggleDark()" id="modeBtn">🌙</button>
+</header>
+ 
+<div class="streak-bar" id="streakBar"></div>
+ 
+<div class="stats-row">
+  <div class="stat-box"><div class="stat-num" id="statStreak">0</div><div class="stat-label">🔥 Streak</div></div>
+  <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-label">📅 Days</div></div>
+  <div class="stat-box"><div class="stat-num" id="statMorning">0</div><div class="stat-label">☀️ AM</div></div>
+  <div class="stat-box"><div class="stat-num" id="statNight">0</div><div class="stat-label">🌙 PM</div></div>
+  <div class="stat-box"><div class="stat-num" id="statWater">0</div><div class="stat-label">💧 5L Days</div></div>
+</div>
+ 
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('morning',event)">☀️ Morning</button>
+  <button class="tab-btn" onclick="switchTab('night',event)">🌙 Night</button>
+  <button class="tab-btn" onclick="switchTab('fitness',event)">💪 Fitness</button>
+  <button class="tab-btn" onclick="switchTab('water',event)">💧 Water</button>
+  <button class="tab-btn" onclick="switchTab('history',event)">📊 History</button>
+  <button class="tab-btn" onclick="switchTab('tips',event)">💡 Tips</button>
+</div>
+ 
+<!-- MORNING -->
+<div class="panel active" id="panel-morning">
+  <div class="section-header">
+    <div class="section-icon morning-icon">☀️</div>
+    <div><div class="section-title">Morning Routine</div><div style="font-size:0.7rem;color:var(--muted)">Brighten + Protect · 5:30 AM</div></div>
+    <div class="progress-mini" id="morningProgress">0/7</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill morning-fill" id="morningBar" style="width:0%"></div></div>
+  <div class="congrats-banner" id="morningCongrats">🌟 Morning routine complete! You're glowing!</div>
+  <button class="complete-all-btn complete-all-morning" onclick="completeAll('morning')">Mark All Complete</button>
+  <div id="morning-list"></div>
+  <button class="reset-btn" onclick="resetRoutine('morning')">↺ Reset Morning</button>
+</div>
+ 
+<!-- NIGHT -->
+<div class="panel" id="panel-night">
+  <div class="section-header">
+    <div class="section-icon night-icon">🌙</div>
+    <div><div class="section-title">Night Routine</div><div style="font-size:0.7rem;color:var(--muted)">Repair + Restore</div></div>
+    <div class="progress-mini" id="nightProgress">0/6</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill night-fill" id="nightBar" style="width:0%"></div></div>
+  <div class="congrats-banner" id="nightCongrats">🌙 Night routine done! Sleep & glow!</div>
+  <button class="complete-all-btn complete-all-night" onclick="completeAll('night')">Mark All Complete</button>
+  <div id="night-list"></div>
+  <button class="reset-btn" onclick="resetRoutine('night')">↺ Reset Night</button>
+</div>
+ 
+<!-- FITNESS -->
+<div class="panel" id="panel-fitness">
+  <div class="section-header">
+    <div class="section-icon fitness-icon">💪</div>
+    <div><div class="section-title">Morning Fitness</div><div style="font-size:0.7rem;color:var(--muted)">Pushups + Stretches · 5:30 AM</div></div>
+    <div class="progress-mini" id="fitnessProgress">0/8</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="fitnessBar" style="width:0%;background:linear-gradient(90deg,#a8d5c2,#5aab8a)"></div></div>
+  <div class="congrats-banner" id="fitnessCongrats">💪 Morning workout DONE! Killing it!</div>
+ 
+  <div class="fitness-section">
+    <div class="fitness-section-title">🔥 Daily Workout</div>
+    <button class="complete-all-btn complete-all-fitness" onclick="completeAll('fitness')">Mark All Complete</button>
+    <div id="fitness-list"></div>
+    <button class="reset-btn" onclick="resetFitness()">↺ Reset Workout</button>
+  </div>
+ 
+  <hr class="divider">
+ 
+  <div class="fitness-section">
+    <div class="fitness-section-title">📝 Extra Activity Log</div>
+    <div class="workout-types" id="workoutTypes"></div>
+    <div class="fitness-log-box" style="margin-bottom:8px">
+      <label>Notes</label>
+      <textarea class="fitness-input" id="fitnessNotes" rows="2" placeholder="e.g. 20 min jog, extra sets..."></textarea>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div class="fitness-log-box" style="flex:1">
+        <label>Duration (min)</label>
+        <input type="number" class="fitness-input" id="fitnessDuration" placeholder="30">
+      </div>
+      <div class="fitness-log-box" style="flex:1">
+        <label>Intensity</label>
+        <select class="fitness-input" id="fitnessIntensity">
+          <option value="">Select…</option>
+          <option>Low 😌</option>
+          <option>Medium 🙂</option>
+          <option>High 🔥</option>
+        </select>
+      </div>
+    </div>
+    <button class="save-btn" onclick="saveFitness()">💾 Save Extra Activity</button>
+  </div>
+ 
+  <hr class="divider">
+  <div style="font-family:'Playfair Display',serif;font-size:0.93rem;margin-bottom:9px;color:var(--rose)">This Week</div>
+  <div id="weekFitness"></div>
+</div>
+ 
+<!-- WATER -->
+<div class="panel" id="panel-water">
+  <div class="section-header">
+    <div class="section-icon water-icon">💧</div>
+    <div><div class="section-title">Water Tracker</div><div style="font-size:0.7rem;color:var(--muted)">Goal: 5L · Your bottle: 40oz</div></div>
+    <div class="progress-mini" id="waterProgress">0/5</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill water-fill" id="waterBar" style="width:0%"></div></div>
+  <div class="congrats-banner" id="waterCongrats" style="background:linear-gradient(135deg,#93d5f7,#1a7fd4)">💧 5L reached! Skin is loving you!</div>
+ 
+  <div class="wake-up-card">
+    <div class="wake-up-icon">⏰</div>
+    <div>
+      <div class="wake-up-title">5:30 AM Wake-Up Rule</div>
+      <div class="wake-up-text">
+        Right when you wake up: drink <strong>34oz = almost 1 full bottle</strong> before anything else.<br>
+        That equals <strong>1 full litre</strong>. This flushes toxins, wakes up your metabolism, and preps your skin to absorb your morning skincare better.
+      </div>
+    </div>
+  </div>
+ 
+  <div class="water-hero">
+    <div class="water-total-display">
+      <div class="water-oz-big" id="waterOzDisplay">0</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--water-dark);margin:2px 0 1px" id="waterLitersDisplay">0.0L</div>
+      <div class="water-oz-sub">of <span>169 oz / 5.0L</span> daily goal</div>
+    </div>
+    <div class="bottles-row" id="bottlesRow"></div>
+    <div style="text-align:center;font-size:0.68rem;color:var(--muted);margin-top:6px">
+      Tap a bottle to fill/unfill · 5 fills = 200oz ≈ 5.9L ✓ (safely over 5L)
+    </div>
+  </div>
+ 
+  <div style="margin-bottom:14px">
+    <div class="water-schedule-title">📅 Daily Schedule — tap when you drink!</div>
+    <div id="waterScheduleList"></div>
+  </div>
+ 
+  <button class="reset-btn" onclick="resetWater()">↺ Reset Today's Water</button>
+</div>
+ 
+<!-- HISTORY -->
+<div class="panel" id="panel-history">
+  <div class="section-header">
+    <div class="section-icon" style="background:linear-gradient(135deg,#ffecd2,#fcb69f)">📊</div>
+    <div><div class="section-title">Progress History</div><div style="font-size:0.7rem;color:var(--muted)">Your consistency log</div></div>
+  </div>
+  <div id="historyList"></div>
+</div>
+ 
+<!-- TIPS -->
+<div class="panel" id="panel-tips">
+  <div class="section-header">
+    <div class="section-icon" style="background:linear-gradient(135deg,#ffd6e7,#ffb3c6)">💡</div>
+    <div><div class="section-title">Tips for Your Goals</div></div>
+  </div>
+  <div class="tip-card">
+    <div class="tip-tag">⏰ 5:30 AM Water Rule</div>
+    <div class="tip-text">Drink 34oz (1L) immediately on waking. This rehydrates your body after 7–8 hours without water, boosts metabolism by up to 30%, and helps your skin absorb morning skincare better.</div>
+  </div>
+  <div class="tip-card">
+    <div class="tip-tag">💪 Pushups + Skin</div>
+    <div class="tip-text">Morning pushups increase blood circulation which delivers oxygen and nutrients to your skin cells — natural glow! Always cleanse your face after a workout to prevent sweat-triggered breakouts.</div>
+  </div>
+  <div class="tip-card">
+    <div class="tip-tag">🧘 Stretch Benefits</div>
+    <div class="tip-text">Morning stretches reduce cortisol (stress hormone) — a top acne trigger. Even 5–10 min after waking sets a calm, focused tone that helps your skin stay clearer throughout the day.</div>
+  </div>
+  <div class="tip-card">
+    <div class="tip-tag">🌿 Brightening Goal</div>
+    <div class="tip-text">Your Vitamin C serum (J Serum 12%) should always go on in the morning, on clean skin, before moisturizer. Always follow with SPF — UV exposure reverses every brightening product you use.</div>
+  </div>
+  <div class="tip-card">
+    <div class="tip-tag">💧 Water + Glow</div>
+    <div class="tip-text">5L/day supports skin elasticity, reduces puffiness, and helps fade dark spots faster. Your Hyaluronic Acid serum works best when you're well hydrated from the inside out.</div>
+  </div>
+  <div class="tip-card">
+    <div class="tip-tag">🧴 Acne Rule</div>
+    <div class="tip-text">Salicylic Acid cleanser = night only. Using it twice a day over-dries skin, triggering MORE oil = more acne. Never skip moisturizer, even with acne — dry skin produces excess oil to compensate.</div>
+  </div>
+  <div class="tip-card">
+    <div class="tip-tag">🌸 Layering Order</div>
+    <div class="tip-text">Always layer thinnest → thickest: toner → serum → eye cream → moisturizer → SPF. Wait 30–60 seconds between each layer so each product fully absorbs before the next one goes on.</div>
+  </div>
+</div>
+ 
+<script>
+const TODAY = new Date().toISOString().split('T')[0];
+const BOTTLE_OZ = 40;
+const GOAL_OZ = 169;
+const BOTTLE_FILLS = 5;
+ 
+const MORNING_STEPS = [
+  { id:'m1', name:'CeraVe Hydrating Foaming Oil Cleanser', desc:'Gently cleanse overnight oils. Massage 30 sec, rinse with lukewarm water.', step:'Step 1 · Cleanse' },
+  { id:'m2', name:'Titir Milk Skin Toner', desc:'Pat directly onto skin or use cotton pad. Preps skin to absorb serums better.', step:'Step 2 · Tone' },
+  { id:'m3', name:'Niacinamide + Propolis Serum', desc:'Targets hyperpigmentation, pores & oil control. 2–3 drops, press gently into skin.', step:'Step 3 · Serum' },
+  { id:'m4', name:'J Serum 12% Vitamin C + Hyaluronic Acid', desc:'✨ BRIGHTENING KEY! Apply after niacinamide. Fades dark spots + deep hydration.', step:'Step 4 · Vitamin C' },
+  { id:'m5', name:'Centella Tone Brightening Capsule', desc:'Lightweight moisture + brightening boost. Blend over face and neck.', step:'Step 5 · Moisturize' },
+  { id:'m6', name:'Under Eye Serum', desc:'Dab gently under eyes with ring finger. Never rub!', step:'Step 6 · Eye Care' },
+  { id:'m7', name:'Sunscreen SPF', desc:'☀️ NON-NEGOTIABLE for lightening! Apply generously 15 min before going out.', step:'Step 7 · Protect' },
+];
+ 
+const NIGHT_STEPS = [
+  { id:'n1', name:'Salicylic Acid Cleanser', desc:'Unclogs pores & fights acne. Focus on forehead. Massage 60 sec, rinse well.', step:'Step 1 · Acne Cleanse' },
+  { id:'n2', name:'CeraVe Foaming Facial Cleanser', desc:'Double cleanse to fully remove SPF/impurities. Rinse with cool water.', step:'Step 2 · Double Cleanse' },
+  { id:'n3', name:'Titir Milk Skin Toner', desc:'Balance pH after cleansing. Hydrates and preps skin for serums.', step:'Step 3 · Tone' },
+  { id:'n4', name:'Niacinamide + Propolis Serum', desc:'Repair and fade spots overnight. Press in gently, let fully absorb.', step:'Step 4 · Serum' },
+  { id:'n5', name:'Centella Tone Brightening Capsule', desc:'Centella calms redness & repairs skin barrier while you sleep.', step:'Step 5 · Moisturize' },
+  { id:'n6', name:'Under Eye Serum', desc:'Night application boosts under-eye repair while you sleep. Pat gently.', step:'Step 6 · Eye Care' },
+];
+ 
+const FITNESS_STEPS = [
+  { id:'f1', name:'Warm-Up: Neck & Shoulder Rolls', desc:'5 slow neck rolls each direction. 10 shoulder circles forward, 10 backward. Wakes up stiff muscles.', step:'Warm-Up · 2 min' },
+  { id:'f2', name:'Warm-Up: Arm Swings + Hip Rotations', desc:'20 big arm swings. 10 hip circles each direction. Gets blood flowing before pushups.', step:'Warm-Up · 2 min' },
+  { id:'f3', name:'Standard Pushups — 3 Sets', desc:'Full range: chest to floor, arms fully extended at top. Keep core tight. Rest 45 sec between sets. Start with 8–10 reps per set.', step:'Pushups · 3 × 10 reps' },
+  { id:'f4', name:'Wide-Grip Pushups — 2 Sets', desc:'Hands wider than shoulder-width. Targets chest and outer shoulders. 6–8 reps per set.', step:'Pushups · 2 × 8 reps' },
+  { id:'f5', name:'Diamond Pushups — 2 Sets', desc:'Hands form a diamond directly under chest. Targets triceps. 5–6 reps — these are hard, go slow!', step:'Pushups · 2 × 6 reps' },
+  { id:'f6', name:"Child's Pose", desc:"From kneeling, sit hips back to heels, arms stretched forward, forehead on floor. Hold 30 sec. Deep back & hip stretch.", step:'Stretch · 30 sec hold' },
+  { id:'f7', name:'Cat-Cow Stretch', desc:'On hands & knees: arch back up (cat), then drop belly down (cow). 10 slow cycles, breathing with each movement.', step:'Stretch · 10 cycles' },
+  { id:'f8', name:'Chest Opener + Quad Stretch', desc:'Clasp hands behind back, open chest, hold 20 sec. Then quad stretch: stand, pull each foot to glute, 20 sec each side.', step:'Stretch · 60 sec total' },
+];
+ 
+const WATER_SCHEDULE = [
+  { id:'w0', time:'5:30 AM', text:'⏰ Wake up — drink right away!', detail:'34oz ≈ 1L', urgent:true },
+  { id:'w1', time:'7:30 AM', text:'After morning skincare & fitness', detail:'20oz (½ bottle)' },
+  { id:'w2', time:'9:30 AM', text:'Mid-morning', detail:'20oz (½ bottle)' },
+  { id:'w3', time:'12:00 PM', text:'Before lunch', detail:'20oz (½ bottle)' },
+  { id:'w4', time:'2:30 PM', text:'Afternoon focus', detail:'20oz (½ bottle)' },
+  { id:'w5', time:'5:00 PM', text:'Pre-dinner', detail:'20oz (½ bottle)' },
+  { id:'w6', time:'7:30 PM', text:'Evening', detail:'20oz (½ bottle)' },
+  { id:'w7', time:'9:00 PM', text:'Last call (stop after this)', detail:'16oz' },
+];
+ 
+const WORKOUT_TYPES = ['🏃 Cardio','🏋️ Weights','🧘 Yoga','🚴 Cycling','🏊 Swim','🤸 HIIT','🚶 Walk','🧗 Other'];
+ 
+// ── STATE ──
+function loadState() { try { return JSON.parse(localStorage.getItem('glowgo_v3') || '{}'); } catch { return {}; } }
+function saveState(s) { localStorage.setItem('glowgo_v3', JSON.stringify(s)); }
+ 
+function getDay(date) {
+  const s = loadState();
+  if (!s.days) s.days = {};
+  if (!s.days[date]) s.days[date] = { morning:{}, night:{}, fitness:{}, fitnessLog:null, water:{ bottles:0, schedule:{} } };
+  const d = s.days[date];
+  if (!d.fitness) d.fitness = {};
+  if (!d.water) d.water = { bottles:0, schedule:{} };
+  if (!d.water.schedule) d.water.schedule = {};
+  return d;
+}
+function setDay(date, data) { const s = loadState(); if (!s.days) s.days = {}; s.days[date] = data; saveState(s); }
+function getDark() { return loadState().dark || false; }
+function setDarkMode(v) { const s = loadState(); s.dark = v; saveState(s); }
+function getWorkoutType() { return loadState().workoutType || ''; }
+function setWorkoutType(v) { const s = loadState(); s.workoutType = v; saveState(s); }
+ 
+// ── BOOT ──
+if (getDark()) { document.body.classList.add('dark'); document.getElementById('modeBtn').textContent = '☀️'; }
+document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+ 
+function toggleDark() {
+  const d = document.body.classList.toggle('dark');
+  document.getElementById('modeBtn').textContent = d ? '☀️' : '🌙';
+  setDarkMode(d);
+}
+ 
+function switchTab(tab, e) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  if (e && e.currentTarget) e.currentTarget.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'history') renderHistory();
+  if (tab === 'fitness') renderWeekFitness();
+  if (tab === 'water') renderWater();
+}
+ 
+// ── SKINCARE ROUTINES ──
+function renderRoutine(type, steps, listId) {
+  const checked = getDay(TODAY)[type] || {};
+  const container = document.getElementById(listId);
+  container.innerHTML = '';
+  steps.forEach(step => {
+    const done = !!checked[step.id];
+    const el = document.createElement('div');
+    el.className = `check-item ${type}${done ? ' done' : ''}`;
+    el.innerHTML = `<div class="check-box">${done ? '✓' : ''}</div><div class="check-content"><div class="check-name">${step.name}</div><div class="check-desc">${step.desc}</div><span class="step-badge">${step.step}</span></div>`;
+    el.onclick = () => { const day = getDay(TODAY); day[type][step.id] = !day[type][step.id]; setDay(TODAY, day); renderRoutine(type, steps, listId); updateAllStats(); };
+    container.appendChild(el);
+  });
+  const done = Object.values(checked).filter(Boolean).length;
+  const total = steps.length;
+  document.getElementById(type + 'Bar').style.width = ((done/total)*100) + '%';
+  document.getElementById(type + 'Progress').textContent = `${done}/${total}`;
+  const c = document.getElementById(type + 'Congrats');
+  if (done === total) c.classList.add('show'); else c.classList.remove('show');
+}
+ 
+// ── FITNESS ROUTINE ──
+function renderFitnessRoutine() {
+  const checked = getDay(TODAY).fitness || {};
+  const container = document.getElementById('fitness-list');
+  container.innerHTML = '';
+  FITNESS_STEPS.forEach(step => {
+    const done = !!checked[step.id];
+    const el = document.createElement('div');
+    el.className = `check-item fitness-item${done ? ' done' : ''}`;
+    el.innerHTML = `<div class="check-box">${done ? '✓' : ''}</div><div class="check-content"><div class="check-name">${step.name}</div><div class="check-desc">${step.desc}</div><span class="step-badge">${step.step}</span></div>`;
+    el.onclick = () => { const day = getDay(TODAY); if (!day.fitness) day.fitness = {}; day.fitness[step.id] = !day.fitness[step.id]; setDay(TODAY, day); renderFitnessRoutine(); updateAllStats(); };
+    container.appendChild(el);
+  });
+  const done = Object.values(checked).filter(Boolean).length;
+  const total = FITNESS_STEPS.length;
+  document.getElementById('fitnessBar').style.width = ((done/total)*100) + '%';
+  document.getElementById('fitnessProgress').textContent = `${done}/${total}`;
+  const c = document.getElementById('fitnessCongrats');
+  if (done === total) c.classList.add('show'); else c.classList.remove('show');
+}
+ 
+function completeAll(type) {
+  const day = getDay(TODAY);
+  if (type === 'fitness') { FITNESS_STEPS.forEach(s => { if (!day.fitness) day.fitness = {}; day.fitness[s.id] = true; }); setDay(TODAY, day); renderFitnessRoutine(); }
+  else { const steps = type === 'morning' ? MORNING_STEPS : NIGHT_STEPS; steps.forEach(s => day[type][s.id] = true); setDay(TODAY, day); renderRoutine(type, steps, type + '-list'); }
+  updateAllStats();
+}
+ 
+function resetRoutine(type) {
+  const day = getDay(TODAY); day[type] = {}; setDay(TODAY, day);
+  renderRoutine(type, type === 'morning' ? MORNING_STEPS : NIGHT_STEPS, type + '-list');
+  updateAllStats();
+}
+function resetFitness() {
+  const day = getDay(TODAY); day.fitness = {}; setDay(TODAY, day);
+  renderFitnessRoutine(); updateAllStats();
+}
+ 
+// ── WATER ──
+function renderWater() {
+  const day = getDay(TODAY);
+  const w = day.water;
+  renderBottles(w.bottles);
+  renderWaterSchedule(w.schedule);
+  updateWaterDisplay(w.bottles);
+}
+ 
+function renderBottles(filledCount) {
+  const row = document.getElementById('bottlesRow');
+  row.innerHTML = '';
+  for (let i = 0; i < BOTTLE_FILLS; i++) {
+    const filled = i < filledCount;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'bottle-unit';
+    wrapper.innerHTML = `
+      <svg class="bottle-svg" viewBox="0 0 38 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="13" y="1" width="12" height="7" rx="3" fill="${filled ? '#1a7fd4' : '#b0d8f5'}"/>
+        <path d="M7 11 Q5 16 5 20 L5 46 Q5 50 9 50 L29 50 Q33 50 33 46 L33 20 Q33 16 31 11 Z" fill="${filled ? '#5bb8f5' : '#e0f4ff'}" stroke="${filled ? '#1a7fd4' : '#93d5f7'}" stroke-width="1.5"/>
+        ${filled ? '<rect x="6" y="22" width="26" height="27" fill="#1a7fd4" opacity="0.35"/>' : ''}
+        <text x="19" y="36" text-anchor="middle" font-size="9" font-weight="700" font-family="sans-serif" fill="${filled ? 'white' : '#93d5f7'}">${i+1}</text>
+        <text x="19" y="46" text-anchor="middle" font-size="6" font-family="sans-serif" fill="${filled ? '#cce8ff' : '#aad0ea'}">40oz</text>
+      </svg>
+      <div class="bottle-label${filled ? ' filled' : ''}">${filled ? '✓ done' : 'tap me'}</div>`;
+    const idx = i;
+    wrapper.onclick = () => {
+      const day = getDay(TODAY);
+      day.water.bottles = (idx < day.water.bottles) ? idx : idx + 1;
+      setDay(TODAY, day);
+      renderBottles(day.water.bottles);
+      updateWaterDisplay(day.water.bottles);
+      updateAllStats();
+    };
+    row.appendChild(wrapper);
+  }
+}
+ 
+function renderWaterSchedule(checked) {
+  const container = document.getElementById('waterScheduleList');
+  container.innerHTML = '';
+  WATER_SCHEDULE.forEach(item => {
+    const done = !!checked[item.id];
+    const el = document.createElement('div');
+    el.className = 'schedule-item' + (done ? ' done' : '');
+    el.innerHTML = `<div class="schedule-check">${done ? '✓' : ''}</div><div class="schedule-time">${item.time}</div><div class="schedule-text">${item.text}</div><div class="schedule-badge">${item.detail}</div>`;
+    el.onclick = () => {
+      const day = getDay(TODAY);
+      day.water.schedule[item.id] = !day.water.schedule[item.id];
+      // sync bottle count with schedule
+      const doneCount = Object.values(day.water.schedule).filter(Boolean).length;
+      const newBottles = Math.min(BOTTLE_FILLS, Math.round(doneCount / WATER_SCHEDULE.length * BOTTLE_FILLS));
+      if (newBottles > day.water.bottles) day.water.bottles = newBottles;
+      setDay(TODAY, day);
+      renderWaterSchedule(day.water.schedule);
+      renderBottles(day.water.bottles);
+      updateWaterDisplay(day.water.bottles);
+      updateAllStats();
+    };
+    container.appendChild(el);
+  });
+}
+ 
+function updateWaterDisplay(bottles) {
+  const oz = bottles * BOTTLE_OZ;
+  const liters = (oz * 0.0295735).toFixed(1);
+  document.getElementById('waterOzDisplay').textContent = oz;
+  document.getElementById('waterLitersDisplay').textContent = liters + 'L';
+  const pct = Math.min(100, (oz / GOAL_OZ) * 100);
+  document.getElementById('waterBar').style.width = pct + '%';
+  document.getElementById('waterProgress').textContent = `${bottles}/${BOTTLE_FILLS}`;
+  const c = document.getElementById('waterCongrats');
+  if (oz >= GOAL_OZ) c.classList.add('show'); else c.classList.remove('show');
+}
+ 
+function resetWater() {
+  const day = getDay(TODAY); day.water = { bottles:0, schedule:{} }; setDay(TODAY, day);
+  renderWater(); updateAllStats();
+}
+ 
+// ── FITNESS LOG ──
+function renderWorkoutTypes() {
+  const container = document.getElementById('workoutTypes');
+  const active = getWorkoutType();
+  container.innerHTML = '';
+  WORKOUT_TYPES.forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'wtype-btn' + (t === active ? ' active' : '');
+    b.textContent = t;
+    b.onclick = () => { setWorkoutType(t); renderWorkoutTypes(); };
+    container.appendChild(b);
+  });
+}
+ 
+function saveFitness() {
+  const notes = document.getElementById('fitnessNotes').value.trim();
+  const duration = document.getElementById('fitnessDuration').value;
+  const intensity = document.getElementById('fitnessIntensity').value;
+  const type = getWorkoutType();
+  if (!notes && !type && !duration) { alert('Add a workout type or notes!'); return; }
+  const day = getDay(TODAY);
+  day.fitnessLog = { type: type || 'Extra Activity', notes, duration, intensity };
+  setDay(TODAY, day);
+  document.getElementById('fitnessNotes').value = '';
+  document.getElementById('fitnessDuration').value = '';
+  document.getElementById('fitnessIntensity').value = '';
+  setWorkoutType('');
+  renderWorkoutTypes();
+  renderWeekFitness();
+  updateAllStats();
+  alert('💪 Activity saved!');
+}
+ 
+function renderWeekFitness() {
+  const container = document.getElementById('weekFitness');
+  const s = loadState();
+  const days = s.days || {};
+  const entries = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const data = days[key];
+    if (data) {
+      const fitDone = Object.values(data.fitness || {}).filter(Boolean).length;
+      const dateLabel = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+      if (fitDone > 0 || data.fitnessLog) entries.push({ dateLabel, fitDone, log: data.fitnessLog });
+    }
+  }
+  if (!entries.length) { container.innerHTML = '<div class="empty-state" style="padding:18px"><span class="emoji">🏃</span>No workouts this week yet!</div>'; return; }
+  container.innerHTML = entries.map(e => `
+    <div class="fitness-log-box" style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-weight:600;font-size:0.83rem">${e.log ? e.log.type : 'Morning Workout'}</span>
+        <span style="font-size:0.68rem;color:var(--muted)">${e.dateLabel}</span>
+      </div>
+      ${e.fitDone > 0 ? `<div style="font-size:0.72rem;color:var(--mint-dark)">✓ ${e.fitDone}/${FITNESS_STEPS.length} exercises done</div>` : ''}
+      ${e.log && e.log.notes ? `<div style="font-size:0.74rem;color:var(--muted);margin-top:3px">${e.log.notes}</div>` : ''}
+      ${e.log && (e.log.duration || e.log.intensity) ? `<div style="font-size:0.7rem;color:var(--rose);margin-top:3px">${e.log.duration ? e.log.duration+' min' : ''} ${e.log.intensity ? '· '+e.log.intensity : ''}</div>` : ''}
+    </div>`).join('');
+}
+ 
+// ── STATS ──
+function updateAllStats() {
+  const s = loadState();
+  const days = s.days || {};
+  let streak = 0, total = 0, morningDone = 0, nightDone = 0, waterDays = 0;
+  const keys = Object.keys(days).sort().reverse();
+  let prevKey = null;
+  for (const k of keys) {
+    const d = days[k];
+    const mDone = Object.values(d.morning || {}).filter(Boolean).length === MORNING_STEPS.length;
+    const nDone = Object.values(d.night || {}).filter(Boolean).length === NIGHT_STEPS.length;
+    const wDone = (d.water || {}).bottles >= BOTTLE_FILLS;
+    if (mDone || nDone) total++;
+    if (mDone) morningDone++;
+    if (nDone) nightDone++;
+    if (wDone) waterDays++;
+    if (mDone && nDone) {
+      if (!prevKey) { streak = 1; prevKey = k; }
+      else { const diff = (new Date(prevKey) - new Date(k)) / 86400000; if (diff === 1) { streak++; prevKey = k; } else break; }
+    }
+  }
+  document.getElementById('statStreak').textContent = streak;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statMorning').textContent = morningDone;
+  document.getElementById('statNight').textContent = nightDone;
+  document.getElementById('statWater').textContent = waterDays;
+  renderStreakBar();
+}
+ 
+function renderStreakBar() {
+  const bar = document.getElementById('streakBar');
+  bar.innerHTML = '';
+  const s = loadState();
+  const days = s.days || {};
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const data = days[key] || {};
+    const mDone = Object.values(data.morning || {}).filter(Boolean).length === MORNING_STEPS.length;
+    const nDone = Object.values(data.night || {}).filter(Boolean).length === NIGHT_STEPS.length;
+    const partial = (Object.values(data.morning || {}).some(Boolean) || Object.values(data.night || {}).some(Boolean)) && !(mDone && nDone);
+    let cls = 'streak-dot';
+    if (mDone && nDone) cls += ' done';
+    else if (partial) cls += ' partial';
+    if (key === TODAY) cls += ' today';
+    const pill = document.createElement('div');
+    pill.className = 'streak-pill';
+    pill.innerHTML = `<div class="${cls}">${mDone && nDone ? '✓' : d.getDate()}</div><div class="streak-day-label">${d.toLocaleDateString('en-US',{weekday:'short'}).slice(0,1)}</div>`;
+    bar.appendChild(pill);
+  }
+  bar.scrollLeft = bar.scrollWidth;
+}
+ 
+// ── HISTORY ──
+function renderHistory() {
+  const s = loadState();
+  const days = s.days || {};
+  const keys = Object.keys(days).sort().reverse();
+  const container = document.getElementById('historyList');
+  if (!keys.length) { container.innerHTML = '<div class="empty-state"><span class="emoji">📋</span>No history yet — start today!</div>'; return; }
+  container.innerHTML = '';
+  keys.forEach(key => {
+    const d = days[key];
+    const mCount = Object.values(d.morning || {}).filter(Boolean).length;
+    const nCount = Object.values(d.night || {}).filter(Boolean).length;
+    const fCount = Object.values(d.fitness || {}).filter(Boolean).length;
+    const wBottles = (d.water || {}).bottles || 0;
+    const mDone = mCount === MORNING_STEPS.length, nDone = nCount === NIGHT_STEPS.length, wDone = wBottles >= BOTTLE_FILLS;
+    const date = new Date(key + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+    const el = document.createElement('div');
+    el.className = 'history-entry';
+    el.innerHTML = `<div class="history-date">${date}</div><div class="history-pills">
+      ${mDone ? '<span class="history-pill pill-morning">☀️ AM ✓</span>' : mCount > 0 ? `<span class="history-pill pill-morning">☀️ ${mCount}/${MORNING_STEPS.length}</span>` : '<span class="history-pill pill-miss">☀️ Skip</span>'}
+      ${nDone ? '<span class="history-pill pill-night">🌙 PM ✓</span>' : nCount > 0 ? `<span class="history-pill pill-night">🌙 ${nCount}/${NIGHT_STEPS.length}</span>` : '<span class="history-pill pill-miss">🌙 Skip</span>'}
+      ${fCount > 0 ? `<span class="history-pill pill-fitness">💪 ${fCount}/${FITNESS_STEPS.length}</span>` : ''}
+      ${wDone ? '<span class="history-pill pill-water">💧 5L ✓</span>' : wBottles > 0 ? `<span class="history-pill pill-water">💧 ${(wBottles*40*0.0295735).toFixed(1)}L</span>` : ''}
+    </div>`;
+    container.appendChild(el);
+  });
+}
+ 
+// ── INIT ──
+renderRoutine('morning', MORNING_STEPS, 'morning-list');
+renderRoutine('night', NIGHT_STEPS, 'night-list');
+renderFitnessRoutine();
+renderWorkoutTypes();
+renderWater();
+updateAllStats();
+</script>
+</body>
+</html>

@@ -222,13 +222,36 @@ body.dark .tip-text { color: var(--night-text); }
 
 .empty-state { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 0.83rem; }
 .empty-state .emoji { font-size: 2.2rem; display: block; margin-bottom: 8px; }
+
+/* ── CALORIE PANEL ── */
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.95)} }
+.cal-meal-card { background:var(--card); border:1px solid #f0e0d8; border-radius:12px; padding:11px 12px; margin-bottom:8px; display:flex; align-items:flex-start; gap:10px; position:relative; animation:slideIn 0.3s ease; }
+body.dark .cal-meal-card { background:var(--night-card); border-color:#1e2d42; }
+.cal-meal-thumb { width:44px; height:44px; border-radius:8px; object-fit:cover; flex-shrink:0; background:var(--card); border:1px solid #f0e0d8; }
+.cal-meal-thumb-ph { width:44px; height:44px; border-radius:8px; background:var(--card); border:1px solid #f0e0d8; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+body.dark .cal-meal-thumb-ph { background:var(--night-card); border-color:#1e2d42; }
+.cal-meal-name { font-weight:700; font-size:0.84rem; line-height:1.2; }
+.cal-meal-items { font-size:0.67rem; color:var(--muted); margin-top:3px; line-height:1.5; white-space:pre-line; }
+.cal-meal-time { font-size:0.6rem; color:var(--muted); margin-top:3px; }
+.cal-meal-kcal { font-weight:800; font-size:0.95rem; color:var(--rose); flex-shrink:0; text-align:right; }
+body.dark .cal-meal-kcal { color:#c8f04a; }
+.cal-meal-kcal-sub { font-size:0.58rem; color:var(--muted); text-align:right; }
+.cal-del-btn { position:absolute; top:7px; right:7px; background:none; border:none; color:var(--muted); font-size:0.75rem; cursor:pointer; padding:2px 5px; border-radius:4px; transition:all 0.15s; }
+.cal-del-btn:hover { background:#fee; color:#c05050; }
+.cal-history-row { background:var(--card); border:1px solid #f0e0d8; border-radius:11px; padding:11px 13px; margin-bottom:8px; }
+body.dark .cal-history-row { background:var(--night-card); border-color:#1e2d42; }
+body.dark #calLimitBanner { background:#2a0a0a !important; border-color:#5a1a1a !important; color:#f08080 !important; }
+body.dark #calModal { background:var(--night-card) !important; }
+body.dark #calScanResult { background:var(--night-card) !important; border-color:#1e2d42 !important; }
+body.dark #calMealLabel { background:var(--night) !important; border-color:#2a3d55 !important; color:var(--night-text) !important; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>✨ Glow & Go</h1>
-  <div class="subtitle">Skincare · Fitness · Water · Tracker</div>
+  <div class="subtitle">Skincare · Fitness · Water · Calories</div>
   <div class="date-display" id="dateDisplay"></div>
   <button class="mode-toggle" onclick="toggleDark()" id="modeBtn">🌙</button>
 </header>
@@ -245,9 +268,10 @@ body.dark .tip-text { color: var(--night-text); }
 
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab('morning',event)">☀️ Morning</button>
-  <button class="tab-btn" onclick="switchTab('night',event)">🌙 Night</button>
-  <button class="tab-btn" onclick="switchTab('fitness',event)">💪 Fitness</button>
   <button class="tab-btn" onclick="switchTab('water',event)">💧 Water</button>
+  <button class="tab-btn" onclick="switchTab('fitness',event)">💪 Fitness</button>
+  <button class="tab-btn" onclick="switchTab('calories',event)">🍽️ Calories</button>
+  <button class="tab-btn" onclick="switchTab('night',event)">🌙 Night</button>
   <button class="tab-btn" onclick="switchTab('history',event)">📊 History</button>
   <button class="tab-btn" onclick="switchTab('tips',event)">💡 Tips</button>
 </div>
@@ -368,6 +392,152 @@ body.dark .tip-text { color: var(--night-text); }
   </div>
 
   <button class="reset-btn" onclick="resetWater()">↺ Reset Today's Water</button>
+</div>
+
+<!-- CALORIES -->
+<div class="panel" id="panel-calories">
+  <div class="section-header">
+    <div class="section-icon" style="background:linear-gradient(135deg,#c8f04a,#7ab800)">🍽️</div>
+    <div><div class="section-title">Calorie Tracker</div><div style="font-size:0.7rem;color:var(--muted)">Goal: 1,600 kcal/day · AI plate scan</div></div>
+  </div>
+
+  <!-- CALORIE RING ROW -->
+  <div style="display:flex;align-items:center;gap:16px;background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px;border:1px solid #f0e0d8">
+    <div style="position:relative;flex-shrink:0;width:90px;height:90px">
+      <svg width="90" height="90" viewBox="0 0 90 90" style="transform:rotate(-90deg)">
+        <circle cx="45" cy="45" r="36" fill="none" stroke="#f0e0d8" stroke-width="7"/>
+        <circle id="calRingFill" cx="45" cy="45" r="36" fill="none" stroke="#c8f04a"
+          stroke-width="7" stroke-linecap="round"
+          stroke-dasharray="226" stroke-dashoffset="226" style="transition:stroke-dashoffset 0.8s ease,stroke 0.4s"/>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;line-height:1" id="calRingNum">0</div>
+        <div style="font-size:0.52rem;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px">kcal</div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:7px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Goal</span>
+        <span style="font-weight:700;font-size:0.88rem">1,600 kcal</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Left</span>
+        <span style="font-weight:700;font-size:0.88rem" id="calRemain">1,600</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Meals</span>
+        <span style="font-weight:700;font-size:0.88rem" id="calMealCount">0</span>
+      </div>
+      <!-- macro mini bars -->
+      <div style="display:flex;flex-direction:column;gap:4px;margin-top:2px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:0.58rem;color:#c9a96e;width:28px;text-transform:uppercase">Carb</span>
+          <div style="flex:1;height:3px;background:#f0e0d8;border-radius:2px;overflow:hidden"><div id="cMacroCarb" style="height:100%;background:#c9a96e;border-radius:2px;width:0%;transition:width 0.5s ease"></div></div>
+          <span style="font-size:0.58rem;color:var(--muted);width:28px;text-align:right" id="cMacroCarbNum">0g</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:0.58rem;color:#5aab8a;width:28px;text-transform:uppercase">Prot</span>
+          <div style="flex:1;height:3px;background:#f0e0d8;border-radius:2px;overflow:hidden"><div id="cMacroProt" style="height:100%;background:#5aab8a;border-radius:2px;width:0%;transition:width 0.5s ease"></div></div>
+          <span style="font-size:0.58rem;color:var(--muted);width:28px;text-align:right" id="cMacroProtNum">0g</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:0.58rem;color:#d4856a;width:28px;text-transform:uppercase">Fat</span>
+          <div style="flex:1;height:3px;background:#f0e0d8;border-radius:2px;overflow:hidden"><div id="cMacroFat" style="height:100%;background:#d4856a;border-radius:2px;width:0%;transition:width 0.5s ease"></div></div>
+          <span style="font-size:0.58rem;color:var(--muted);width:28px;text-align:right" id="cMacroFatNum">0g</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVER LIMIT WARNING -->
+  <div id="calLimitBanner" style="display:none;background:#fff0f0;border:1px solid #f5c0c0;border-radius:11px;padding:10px 13px;margin-bottom:12px;font-size:0.74rem;color:#c05050;line-height:1.4">
+    ⚠️ You've hit your 1,600 kcal goal for today. Try lighter options for your next meal.
+  </div>
+  body.dark #calLimitBanner { background:#2a0a0a; border-color:#5a1a1a; color:#f08080; }
+
+  <!-- SCAN BUTTON -->
+  <button onclick="openCalModal()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:linear-gradient(135deg,#c8f04a,#7ab800);border:none;border-radius:13px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:700;color:#1a2500;cursor:pointer;margin-bottom:14px;transition:all 0.2s;letter-spacing:0.3px">
+    <span style="font-size:1.1rem">📷</span> Scan My Plate
+  </button>
+
+  <!-- TODAY'S MEALS -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+    <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted)">Today's Meals</div>
+    <button onclick="clearCalToday()" style="font-size:0.62rem;color:var(--muted);background:none;border:1px solid #f0e0d8;padding:3px 9px;border-radius:5px;cursor:pointer;font-family:'DM Sans',sans-serif">Clear day</button>
+  </div>
+  <div id="calMealsList"></div>
+
+  <hr class="divider">
+
+  <!-- 7-DAY HISTORY -->
+  <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:9px">Past 7 Days</div>
+  <div id="calHistoryList"></div>
+</div>
+
+<!-- CAL SCANNER MODAL -->
+<div id="calModalOverlay" onclick="handleCalOverlay(event)" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center">
+  <div id="calModal" style="background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:22px 18px 34px;max-height:90vh;overflow-y:auto;animation:slideUp 0.3s cubic-bezier(0.4,0,0.2,1)">
+    <div style="width:34px;height:4px;background:#f0e0d8;border-radius:2px;margin:0 auto 18px"></div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.05rem;margin-bottom:14px">Scan Your <span style="color:var(--rose)">Plate</span></div>
+
+    <!-- Upload zone -->
+    <div id="calUploadZone" style="border:2px dashed var(--blush);border-radius:13px;padding:24px 16px;text-align:center;cursor:pointer;position:relative;transition:border-color 0.2s;margin-bottom:12px">
+      <input type="file" accept="image/*" capture="environment" id="calFileInput" onchange="handleCalFile(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+      <div style="font-size:2rem;margin-bottom:8px">🍽️</div>
+      <div style="font-weight:700;font-size:0.85rem;margin-bottom:3px">Take a photo or upload</div>
+      <div style="font-size:0.68rem;color:var(--muted)">Tap to open camera or choose from gallery</div>
+    </div>
+
+    <!-- Preview -->
+    <div id="calPreviewWrap" style="display:none;position:relative;border-radius:13px;overflow:hidden;margin-bottom:12px">
+      <img id="calPreviewImg" src="" style="width:100%;max-height:200px;object-fit:cover;display:block">
+      <button onclick="document.getElementById('calFileInput').click()" style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.2);color:white;font-size:0.62rem;padding:5px 10px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif">Change</button>
+    </div>
+
+    <!-- Label -->
+    <div id="calLabelWrap" style="display:none;margin-bottom:12px">
+      <input id="calMealLabel" placeholder="Meal name (e.g. Breakfast, Lunch…)" maxlength="40"
+        style="width:100%;background:white;border:1px solid var(--blush);border-radius:10px;padding:11px 13px;font-family:'DM Sans',sans-serif;font-size:0.86rem;color:var(--text);outline:none">
+    </div>
+
+    <!-- Analyzing -->
+    <div id="calAnalyzing" style="display:none;text-align:center;padding:24px 0">
+      <div style="font-size:2rem;animation:pulse 1.2s ease-in-out infinite">🔍</div>
+      <div style="font-size:0.7rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:10px">Analyzing your plate…</div>
+    </div>
+
+    <!-- Error -->
+    <div id="calScanError" style="display:none;background:#fff0f0;border:1px solid #f5c0c0;border-radius:10px;padding:11px 13px;margin-bottom:12px;font-size:0.72rem;color:#c05050"></div>
+
+    <!-- Result -->
+    <div id="calScanResult" style="display:none;background:white;border:1px solid var(--blush);border-radius:13px;padding:14px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--rose)">Detected Foods</div>
+        <div style="font-weight:800;font-size:1.3rem" id="calResultNum">0 <span style="font-size:0.65rem;color:var(--muted);font-weight:400">kcal</span></div>
+      </div>
+      <ul id="calResultItems" style="list-style:none"></ul>
+      <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #f0e0d8">
+        <div style="flex:1;text-align:center;background:var(--card);border-radius:8px;padding:7px 4px">
+          <div style="font-weight:700;font-size:0.85rem;color:#c9a96e" id="calResCarb">0g</div>
+          <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:1px">Carbs</div>
+        </div>
+        <div style="flex:1;text-align:center;background:var(--card);border-radius:8px;padding:7px 4px">
+          <div style="font-weight:700;font-size:0.85rem;color:#5aab8a" id="calResProt">0g</div>
+          <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:1px">Protein</div>
+        </div>
+        <div style="flex:1;text-align:center;background:var(--card);border-radius:8px;padding:7px 4px">
+          <div style="font-weight:700;font-size:0.85rem;color:#d4856a" id="calResFat">0g</div>
+          <div style="font-size:0.55rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:1px">Fat</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div id="calModalActions" style="display:flex;gap:10px">
+      <button onclick="closeCalModal()" style="padding:13px 16px;background:none;border:1px solid var(--blush);border-radius:11px;font-family:'DM Sans',sans-serif;font-size:0.86rem;font-weight:600;color:var(--muted);cursor:pointer">Cancel</button>
+      <button id="calAnalyzeBtn" onclick="analyzeCalPlate()" disabled style="flex:1;padding:13px;background:linear-gradient(135deg,#c8f04a,#7ab800);border:none;border-radius:11px;font-family:'DM Sans',sans-serif;font-size:0.86rem;font-weight:700;color:#1a2500;cursor:pointer;opacity:0.4;transition:all 0.2s">Analyze Plate</button>
+    </div>
+  </div>
 </div>
 
 <!-- HISTORY -->
@@ -503,6 +673,7 @@ function switchTab(tab, e) {
   if (tab === 'history') renderHistory();
   if (tab === 'fitness') renderWeekFitness();
   if (tab === 'water') renderWater();
+  if (tab === 'calories') renderCalPanel();
 }
 
 // ── SKINCARE ROUTINES ──
@@ -793,6 +964,269 @@ renderFitnessRoutine();
 renderWorkoutTypes();
 renderWater();
 updateAllStats();
+
+// ══════════════════════════════════════════════
+// CALORIE TRACKER
+// ══════════════════════════════════════════════
+const CAL_GOAL = 1600;
+const CAL_KEY = 'glowgo_calories_v1';
+
+function calLoadData() { try { return JSON.parse(localStorage.getItem(CAL_KEY) || '{}'); } catch { return {}; } }
+function calSaveData(d) { localStorage.setItem(CAL_KEY, JSON.stringify(d)); }
+
+function calGetToday() {
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+}
+
+// EST-aware time string for meal timestamps
+function calGetESTTime() {
+  return new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', timeZone:'America/New_York' });
+}
+
+function calGetTodayMeals() {
+  const d = calLoadData(); const t = calGetToday();
+  if (!d[t]) d[t] = [];
+  return d[t];
+}
+
+function calSaveMeal(meal) {
+  const d = calLoadData(); const t = calGetToday();
+  if (!d[t]) d[t] = [];
+  d[t].push(meal);
+  calSaveData(d);
+}
+
+function calDeleteMeal(idx) {
+  const d = calLoadData(); const t = calGetToday();
+  if (d[t]) { d[t].splice(idx, 1); calSaveData(d); }
+  renderCalPanel();
+}
+
+function clearCalToday() {
+  if (!confirm('Clear all meals for today?')) return;
+  const d = calLoadData(); d[calGetToday()] = []; calSaveData(d);
+  renderCalPanel();
+}
+
+function renderCalPanel() {
+  renderCalRing();
+  renderCalMeals();
+  renderCalHistory();
+}
+
+function renderCalRing() {
+  const meals = calGetTodayMeals();
+  const totalCal = meals.reduce((s,m) => s+(m.calories||0), 0);
+  const totalCarb = meals.reduce((s,m) => s+(m.carbs||0), 0);
+  const totalProt = meals.reduce((s,m) => s+(m.protein||0), 0);
+  const totalFat  = meals.reduce((s,m) => s+(m.fat||0), 0);
+
+  const pct = Math.min(1, totalCal / CAL_GOAL);
+  const circum = 226;
+  document.getElementById('calRingFill').style.strokeDashoffset = circum - pct * circum;
+  const over = totalCal > CAL_GOAL;
+  document.getElementById('calRingFill').style.stroke = over ? '#f04a4a' : pct > 0.85 ? '#c9a96e' : '#7ab800';
+  document.getElementById('calRingNum').textContent = totalCal.toLocaleString();
+
+  const remain = CAL_GOAL - totalCal;
+  const remEl = document.getElementById('calRemain');
+  if (remain < 0) { remEl.textContent = '+' + Math.abs(remain) + ' over'; remEl.style.color = '#c05050'; }
+  else { remEl.textContent = remain.toLocaleString(); remEl.style.color = remain < 200 ? '#c9a96e' : '#5aab8a'; }
+  document.getElementById('calMealCount').textContent = meals.length;
+
+  document.getElementById('cMacroCarb').style.width = Math.min(100,(totalCarb/200)*100)+'%';
+  document.getElementById('cMacroProt').style.width = Math.min(100,(totalProt/100)*100)+'%';
+  document.getElementById('cMacroFat').style.width  = Math.min(100,(totalFat/65)*100)+'%';
+  document.getElementById('cMacroCarbNum').textContent = totalCarb+'g';
+  document.getElementById('cMacroProtNum').textContent = totalProt+'g';
+  document.getElementById('cMacroFatNum').textContent  = totalFat+'g';
+
+  document.getElementById('calLimitBanner').style.display = over ? 'block' : 'none';
+}
+
+function renderCalMeals() {
+  const meals = calGetTodayMeals();
+  const c = document.getElementById('calMealsList');
+  if (!meals.length) {
+    c.innerHTML = '<div class="empty-state" style="padding:20px 0"><span class="emoji">🍽️</span>No meals logged yet.<br>Tap "Scan My Plate" above!</div>';
+    return;
+  }
+  c.innerHTML = meals.map((m,i) => `
+    <div class="cal-meal-card">
+      ${m.thumb ? `<img class="cal-meal-thumb" src="${m.thumb}" alt="meal">` : `<div class="cal-meal-thumb-ph">🥗</div>`}
+      <div style="flex:1;min-width:0">
+        <div class="cal-meal-name">${m.name||'Meal'}</div>
+        <div class="cal-meal-items">${(m.items||[]).map(it=>`${it.name} — ${it.calories} kcal`).join('\n')}</div>
+        <div class="cal-meal-time">${m.time||''}</div>
+      </div>
+      <div>
+        <div class="cal-meal-kcal">${(m.calories||0).toLocaleString()}</div>
+        <div class="cal-meal-kcal-sub">kcal</div>
+      </div>
+      <button class="cal-del-btn" onclick="calDeleteMeal(${i})">✕</button>
+    </div>`).join('');
+}
+
+function renderCalHistory() {
+  const d = calLoadData();
+  const c = document.getElementById('calHistoryList');
+  const rows = [];
+  for (let i = 1; i <= 7; i++) {
+    const dt = new Date(); dt.setDate(dt.getDate() - i);
+    const key = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    const meals = d[key] || [];
+    const total = meals.reduce((s,m) => s+(m.calories||0), 0);
+    const pct = Math.min(100, (total/CAL_GOAL)*100);
+    const label = dt.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+    const col = total > CAL_GOAL ? '#c05050' : total > CAL_GOAL*0.85 ? '#c9a96e' : '#5aab8a';
+    rows.push(`
+      <div class="cal-history-row">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:0.72rem;color:var(--muted)">${label}</div>
+          <div style="font-weight:700;font-size:0.88rem;color:${col}">${total ? total.toLocaleString()+' kcal' : '— no data'}</div>
+        </div>
+        <div style="background:#f0e8e0;border-radius:4px;height:5px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${col};border-radius:4px;transition:width 0.6s ease"></div>
+        </div>
+        <div style="font-size:0.6rem;color:var(--muted);margin-top:4px">${meals.length} meal${meals.length!==1?'s':''} · goal: 1,600 kcal</div>
+      </div>`);
+  }
+  c.innerHTML = rows.join('') || '<div class="empty-state" style="padding:16px 0"><span class="emoji">📅</span>No history yet.</div>';
+}
+
+// ── CAL MODAL ──────────────────────────────────────────────────────
+let _calBase64 = null;
+let _calResult = null;
+
+function openCalModal() {
+  _calBase64 = null; _calResult = null;
+  document.getElementById('calUploadZone').style.display = 'block';
+  document.getElementById('calPreviewWrap').style.display = 'none';
+  document.getElementById('calLabelWrap').style.display = 'none';
+  document.getElementById('calAnalyzing').style.display = 'none';
+  document.getElementById('calScanResult').style.display = 'none';
+  document.getElementById('calScanError').style.display = 'none';
+  document.getElementById('calMealLabel').value = '';
+  const btn = document.getElementById('calAnalyzeBtn');
+  btn.disabled = true; btn.style.opacity = '0.4'; btn.textContent = 'Analyze Plate'; btn.onclick = analyzeCalPlate;
+  document.getElementById('calModalActions').style.display = 'flex';
+  const overlay = document.getElementById('calModalOverlay');
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCalModal() {
+  document.getElementById('calModalOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function handleCalOverlay(e) {
+  if (e.target === document.getElementById('calModalOverlay')) closeCalModal();
+}
+
+function handleCalFile(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    _calBase64 = ev.target.result.split(',')[1];
+    document.getElementById('calPreviewImg').src = ev.target.result;
+    document.getElementById('calPreviewWrap').style.display = 'block';
+    document.getElementById('calUploadZone').style.display = 'none';
+    document.getElementById('calLabelWrap').style.display = 'block';
+    document.getElementById('calScanResult').style.display = 'none';
+    document.getElementById('calScanError').style.display = 'none';
+    const btn = document.getElementById('calAnalyzeBtn');
+    btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Analyze Plate'; btn.onclick = analyzeCalPlate;
+    _calResult = null;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeCalPlate() {
+  if (!_calBase64) return;
+  document.getElementById('calAnalyzing').style.display = 'block';
+  document.getElementById('calScanResult').style.display = 'none';
+  document.getElementById('calScanError').style.display = 'none';
+  document.getElementById('calModalActions').style.display = 'none';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type:'image', source:{ type:'base64', media_type:'image/jpeg', data:_calBase64 } },
+            { type:'text', text:`You are a nutrition expert. Analyze this food photo and identify every food item visible.
+
+For each item estimate: name, approximate portion, calories.
+Also estimate total macros.
+
+Respond ONLY with valid JSON, no markdown, no backticks:
+{"meal_name":"brief meal name","items":[{"name":"food + portion","calories":250}],"total_calories":500,"protein_g":30,"carbs_g":45,"fat_g":15}
+
+Be realistic with portions. Always respond with valid JSON.` }
+          ]
+        }]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || 'API error');
+    const raw = data.content.map(c=>c.text||'').join('');
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    _calResult = {
+      name: document.getElementById('calMealLabel').value.trim() || parsed.meal_name || 'Meal',
+      calories: parsed.total_calories || 0,
+      protein: parsed.protein_g || 0,
+      carbs: parsed.carbs_g || 0,
+      fat: parsed.fat_g || 0,
+      items: parsed.items || [],
+      thumb: document.getElementById('calPreviewImg').src,
+      time: calGetESTTime()
+    };
+    showCalResult(_calResult);
+  } catch(err) {
+    document.getElementById('calAnalyzing').style.display = 'none';
+    const errEl = document.getElementById('calScanError');
+    errEl.textContent = '⚠️ Could not analyze image. Please try again with a clearer photo.';
+    errEl.style.display = 'block';
+    document.getElementById('calModalActions').style.display = 'flex';
+    const btn = document.getElementById('calAnalyzeBtn');
+    btn.disabled = false; btn.style.opacity = '1';
+    console.error(err);
+  }
+}
+
+function showCalResult(r) {
+  document.getElementById('calAnalyzing').style.display = 'none';
+  document.getElementById('calResultNum').innerHTML = `${(r.calories||0).toLocaleString()} <span style="font-size:0.65rem;color:var(--muted);font-weight:400">kcal</span>`;
+  document.getElementById('calResCarb').textContent = (r.carbs||0)+'g';
+  document.getElementById('calResProt').textContent = (r.protein||0)+'g';
+  document.getElementById('calResFat').textContent  = (r.fat||0)+'g';
+  document.getElementById('calResultItems').innerHTML = (r.items||[]).map(it =>
+    `<li style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0e0d8;font-size:0.8rem">
+      <span>${it.name}</span>
+      <span style="font-size:0.7rem;color:var(--muted)">${it.calories} kcal</span>
+    </li>`).join('');
+  document.getElementById('calScanResult').style.display = 'block';
+  document.getElementById('calModalActions').style.display = 'flex';
+  const btn = document.getElementById('calAnalyzeBtn');
+  btn.textContent = 'Add to Today';
+  btn.disabled = false; btn.style.opacity = '1';
+  btn.onclick = addCalMeal;
+}
+
+function addCalMeal() {
+  if (!_calResult) return;
+  if (document.getElementById('calMealLabel').value.trim()) _calResult.name = document.getElementById('calMealLabel').value.trim();
+  calSaveMeal(_calResult);
+  closeCalModal();
+  renderCalPanel();
+}
 </script>
 </body>
 </html>

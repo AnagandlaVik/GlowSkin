@@ -1124,12 +1124,35 @@ function handleCalOverlay(e) {
   if (e.target === document.getElementById('calModalOverlay')) closeCalModal();
 }
 
+let _calMediaType = 'image/jpeg';
+
 function handleCalFile(e) {
   const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    _calBase64 = ev.target.result.split(',')[1];
-    document.getElementById('calPreviewImg').src = ev.target.result;
+
+  // Determine safe media type — API accepts jpeg, png, gif, webp
+  const mime = file.type || 'image/jpeg';
+  const allowed = ['image/jpeg','image/png','image/gif','image/webp'];
+  _calMediaType = allowed.includes(mime) ? mime : 'image/jpeg';
+
+  // Resize/convert to JPEG via canvas to ensure compatibility
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    const MAX = 1024;
+    let w = img.width, h = img.height;
+    if (w > MAX || h > MAX) {
+      if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+      else { w = Math.round(w * MAX / h); h = MAX; }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    _calBase64 = dataUrl.split(',')[1];
+    _calMediaType = 'image/jpeg';
+    URL.revokeObjectURL(url);
+
+    document.getElementById('calPreviewImg').src = dataUrl;
     document.getElementById('calPreviewWrap').style.display = 'block';
     document.getElementById('calUploadZone').style.display = 'none';
     document.getElementById('calLabelWrap').style.display = 'block';
@@ -1139,7 +1162,11 @@ function handleCalFile(e) {
     btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Analyze Plate'; btn.onclick = analyzeCalPlate;
     _calResult = null;
   };
-  reader.readAsDataURL(file);
+  img.onerror = () => {
+    document.getElementById('calScanError').textContent = '⚠️ Could not load image. Please try a different photo.';
+    document.getElementById('calScanError').style.display = 'block';
+  };
+  img.src = url;
 }
 
 async function analyzeCalPlate() {
@@ -1159,24 +1186,35 @@ async function analyzeCalPlate() {
         messages: [{
           role: 'user',
           content: [
-            { type:'image', source:{ type:'base64', media_type:'image/jpeg', data:_calBase64 } },
-            { type:'text', text:`You are a nutrition expert. Analyze this food photo and identify every food item visible.
+            { type:'image', source:{ type:'base64', media_type: _calMediaType, data:_calBase64 } },
+            { type:'text', text:`You are a nutrition expert. Look at this image and identify ALL food and drink items — this could be a full meal, a snack, a single item, a packaged food, candy, chips, fruit, a drink, anything edible.
 
-For each item estimate: name, approximate portion, calories.
-Also estimate total macros.
+For every item you can see, estimate:
+- The item name and approximate portion/size
+- Calorie count for that portion
 
-Respond ONLY with valid JSON, no markdown, no backticks:
-{"meal_name":"brief meal name","items":[{"name":"food + portion","calories":250}],"total_calories":500,"protein_g":30,"carbs_g":45,"fat_g":15}
+Then estimate total macros for everything combined.
 
-Be realistic with portions. Always respond with valid JSON.` }
+You MUST respond ONLY with valid JSON — no markdown fences, no explanation, nothing else:
+{"meal_name":"short descriptive name","items":[{"name":"item name + portion","calories":150}],"total_calories":400,"protein_g":10,"carbs_g":50,"fat_g":12}
+
+Rules:
+- If it's a snack, packaged food, or single item, still analyze it
+- Use realistic average portion estimates
+- If you truly cannot see any food at all, return: {"meal_name":"Unknown","items":[{"name":"Could not identify food","calories":0}],"total_calories":0,"protein_g":0,"carbs_g":0,"fat_g":0}
+- ALWAYS return valid JSON` }
           ]
         }]
       })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || 'API error');
-    const raw = data.content.map(c=>c.text||'').join('');
-    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    if (!res.ok) throw new Error(data.error?.message || 'API error ' + res.status);
+
+    const raw = data.content.map(c => c.text || '').join('').trim();
+    // Strip any accidental markdown fences
+    const clean = raw.replace(/^```(?:json)?/,'').replace(/```$/,'').trim();
+    const parsed = JSON.parse(clean);
+
     _calResult = {
       name: document.getElementById('calMealLabel').value.trim() || parsed.meal_name || 'Meal',
       calories: parsed.total_calories || 0,
@@ -1191,12 +1229,12 @@ Be realistic with portions. Always respond with valid JSON.` }
   } catch(err) {
     document.getElementById('calAnalyzing').style.display = 'none';
     const errEl = document.getElementById('calScanError');
-    errEl.textContent = '⚠️ Could not analyze image. Please try again with a clearer photo.';
+    errEl.textContent = '⚠️ Could not analyze image. Make sure the photo shows the food clearly and try again. Error: ' + err.message;
     errEl.style.display = 'block';
     document.getElementById('calModalActions').style.display = 'flex';
     const btn = document.getElementById('calAnalyzeBtn');
     btn.disabled = false; btn.style.opacity = '1';
-    console.error(err);
+    console.error('Calorie scan error:', err);
   }
 }
 

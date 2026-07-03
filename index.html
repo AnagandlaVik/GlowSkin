@@ -100,6 +100,8 @@ body.dark .check-item.morning.done { background: #2a1e00; border-color: var(--go
 body.dark .check-item.night.done { background: #1a0e2a; border-color: #a07cc5; }
 .check-item.fitness-item.done { border-color: var(--mint-dark); background: #eaf7f2; }
 body.dark .check-item.fitness-item.done { background: #0a2a1e; border-color: var(--mint-dark); }
+.check-item.gym-item.done { border-color: #7c9cd4; background: #eef2fb; }
+body.dark .check-item.gym-item.done { background: #101c33; border-color: #7c9cd4; }
 
 .check-box { width: 23px; height: 23px; flex-shrink: 0; border-radius: 7px; border: 2px solid var(--blush); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; transition: all 0.25s; margin-top: 1px; }
 body.dark .check-box { border-color: #2a3d55; }
@@ -107,6 +109,7 @@ body.dark .check-box { border-color: #2a3d55; }
 .check-item.morning.done .check-box { background: var(--gold); border-color: var(--gold); }
 .check-item.night.done .check-box { background: #9b72cf; border-color: #9b72cf; }
 .check-item.fitness-item.done .check-box { background: var(--mint-dark); border-color: var(--mint-dark); }
+.check-item.gym-item.done .check-box { background: #5c7cc4; border-color: #5c7cc4; }
 
 .check-content { flex: 1; min-width: 0; }
 .check-name { font-weight: 600; font-size: 0.86rem; color: var(--deep); }
@@ -116,6 +119,7 @@ body.dark .check-name { color: var(--night-text); }
 .step-badge { font-size: 0.58rem; background: var(--blush); color: var(--rose); padding: 2px 6px; border-radius: 20px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; margin-top: 3px; display: inline-block; }
 .check-item.night .step-badge { background: #e8d8f5; color: #7040a0; }
 .check-item.fitness-item .step-badge { background: #d4f0e8; color: #2a7a5a; }
+.check-item.gym-item .step-badge { background: #dde6f9; color: #3a5aa0; }
 
 .reset-btn { display: block; width: 100%; padding: 11px; border: 2px dashed var(--blush); background: none; border-radius: 13px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; margin-top: 8px; transition: all 0.2s; }
 body.dark .reset-btn { border-color: #2a3d55; }
@@ -128,6 +132,8 @@ body.dark .reset-btn { border-color: #2a3d55; }
 .complete-all-night:hover { background: #f5f0ff; }
 .complete-all-fitness { border-color: var(--mint-dark); color: var(--mint-dark); background: none; }
 .complete-all-fitness:hover { background: #eaf7f2; }
+.complete-all-gym { border-color: #5c7cc4; color: #5c7cc4; background: none; }
+.complete-all-gym:hover { background: #eef2fb; }
 
 .save-btn { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--mint), var(--mint-dark)); border: none; border-radius: 13px; color: white; font-family: 'DM Sans', sans-serif; font-size: 0.86rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
 .save-btn:active { transform: scale(0.98); }
@@ -200,6 +206,24 @@ body.dark .fitness-input { color: var(--night-text); }
 body.dark .wtype-btn { border-color: #2a3d55; color: var(--night-muted); }
 .wtype-btn.active { background: var(--mint-dark); border-color: var(--mint-dark); color: white; }
 
+.gym-day-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.gym-day-btn { padding: 7px 12px; border-radius: 20px; border: 1.5px solid #b8c8ec; background: none; font-size: 0.72rem; font-family: 'DM Sans', sans-serif; font-weight: 600; color: #5c7cc4; cursor: pointer; transition: all 0.2s; }
+body.dark .gym-day-btn { border-color: #2a3d55; color: #8ca6e0; }
+.gym-day-btn.active { background: #5c7cc4; border-color: #5c7cc4; color: white; }
+.gym-day-btn.rest { border-color: var(--gold); color: var(--gold); }
+.gym-day-btn.rest.active { background: var(--gold); border-color: var(--gold); color: white; }
+
+.rest-day-card { background: linear-gradient(135deg, #fff8ee, #fff3dd); border: 1.5px solid var(--gold); border-radius: 14px; padding: 16px; text-align: center; }
+body.dark .rest-day-card { background: linear-gradient(135deg, #2a2000, #1a1400); border-color: #7a5a00; }
+.rest-day-emoji { font-size: 2.2rem; margin-bottom: 6px; }
+.rest-day-title { font-weight: 700; font-size: 0.95rem; color: #a87a1a; margin-bottom: 4px; }
+body.dark .rest-day-title { color: var(--gold); }
+.rest-day-text { font-size: 0.78rem; color: #8a6a2a; line-height: 1.5; margin-bottom: 12px; }
+body.dark .rest-day-text { color: #c9a96e; }
+.rest-walk-btn { padding: 10px 18px; border-radius: 30px; border: 2px solid var(--gold); background: none; color: #a87a1a; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+body.dark .rest-walk-btn { color: var(--gold); }
+.rest-walk-btn.done { background: var(--gold); color: white; }
+
 /* HISTORY & TIPS */
 .history-entry { background: var(--card); border-radius: 13px; padding: 12px 13px; margin-bottom: 9px; border: 1px solid #f0e0d8; }
 body.dark .history-entry { background: var(--night-card); border-color: #1e2d42; }
@@ -211,6 +235,7 @@ body.dark .history-date { color: #5bb8f5; }
 .pill-night { background: #f0e8ff; color: #7040a0; }
 .pill-fitness { background: #e8f7f2; color: #3a8a6a; }
 .pill-water { background: #e0f4ff; color: #1a6090; }
+.pill-gym { background: #eef2fb; color: #3a5aa0; }
 .pill-miss { background: #fee; color: #c05050; }
 
 .tip-card { background: linear-gradient(135deg, #fff3f0, #fff8f3); border: 1.5px solid var(--blush); border-radius: 13px; padding: 12px 13px; margin-bottom: 9px; }
@@ -324,6 +349,20 @@ body.dark .tip-text { color: var(--night-text); }
       </div>
     </div>
     <button class="save-btn" onclick="saveFitness()">💾 Save Extra Activity</button>
+  </div>
+
+  <hr class="divider">
+
+  <div class="fitness-section">
+    <div class="fitness-section-title">🏋️ Gym Split</div>
+    <div class="gym-day-tabs" id="gymDayTabs"></div>
+    <div class="progress-mini" id="gymProgress" style="margin:0 0 8px;text-align:right"></div>
+    <div class="progress-bar-wrap" id="gymBarWrap"><div class="progress-bar-fill" id="gymBar" style="width:0%;background:linear-gradient(90deg,#a3b8e8,#5c7cc4)"></div></div>
+    <div class="congrats-banner" id="gymCongrats" style="background:linear-gradient(135deg,#a3b8e8,#5c7cc4)">🏋️ Gym day crushed! Great work!</div>
+    <button class="complete-all-btn complete-all-gym" id="gymCompleteAllBtn" onclick="completeAllGym()">Mark All Complete</button>
+    <div id="gym-list"></div>
+    <div id="gym-rest-card"></div>
+    <button class="reset-btn" id="gymResetBtn" onclick="resetGym()">↺ Reset This Session</button>
   </div>
 
   <hr class="divider">
@@ -467,6 +506,46 @@ const WATER_SCHEDULE = [
 
 const WORKOUT_TYPES = ['🏃 Cardio','🏋️ Weights','🧘 Yoga','🚴 Cycling','🏊 Swim','🤸 HIIT','🚶 Walk','🧗 Other'];
 
+const GYM_SPLIT = {
+  day1: { label: 'Day 1', title: 'Chest + Shoulders', exercises: [
+    { id:'g1_1', name:'Chest Press Machine', sets:'4 × 8–12' },
+    { id:'g1_2', name:'Pec Deck Fly Machine', sets:'3 × 10–15' },
+    { id:'g1_3', name:'Shoulder Press Machine', sets:'4 × 8–12' },
+    { id:'g1_4', name:'Lateral Raise Machine', sets:'3 × 12–15' },
+    { id:'g1_5', name:'Tricep Pushdown', sets:'3 × 12–15' },
+  ]},
+  day2: { label: 'Day 2', title: 'Back + Biceps', exercises: [
+    { id:'g2_1', name:'Lat Pulldown', sets:'4 × 8–12' },
+    { id:'g2_2', name:'Seated Row Machine', sets:'4 × 8–12' },
+    { id:'g2_3', name:'Face Pull Machine', sets:'3 × 12–15' },
+    { id:'g2_4', name:'Bicep Curl Machine', sets:'3 × 10–15' },
+    { id:'g2_5', name:'Hammer Curl Machine (if available)', sets:'3 × 12–15' },
+  ]},
+  day3: { label: 'Day 3', title: 'Legs + Abs', exercises: [
+    { id:'g3_1', name:'Leg Press', sets:'4 × 8–12' },
+    { id:'g3_2', name:'Leg Extension', sets:'3 × 10–15' },
+    { id:'g3_3', name:'Leg Curl', sets:'3 × 10–15' },
+    { id:'g3_4', name:'Calf Raise Machine', sets:'4 × 12–15' },
+    { id:'g3_5', name:'Plank', sets:'3 × 45–60s' },
+    { id:'g3_6', name:'Cable Crunches', sets:'3 × 15' },
+  ]},
+  day4: { label: 'Day 4', title: 'Upper Body (Push/Pull Mix)', exercises: [
+    { id:'g4_1', name:'Chest Press or Incline Press Machine', sets:'3 × 8–12' },
+    { id:'g4_2', name:'Lat Pulldown', sets:'3 × 8–12' },
+    { id:'g4_3', name:'Shoulder Press', sets:'3 × 8–12' },
+    { id:'g4_4', name:'Seated Row', sets:'3 × 8–12' },
+    { id:'g4_5', name:'Tricep + Bicep Superset', sets:'3 × 12–15 each' },
+  ]},
+  day5: { label: 'Day 5', title: 'Full Body / Weak Point Day', exercises: [
+    { id:'g5_1', name:'Leg Press or Squat Machine', sets:'3 × 8–12' },
+    { id:'g5_2', name:'Chest Press', sets:'3 × 8–12' },
+    { id:'g5_3', name:'Lat Pulldown', sets:'3 × 8–12' },
+    { id:'g5_4', name:'Lateral Raises + Rear Delt', sets:'3 × 12–15' },
+    { id:'g5_5', name:'Abs + Core', sets:'—' },
+  ]},
+};
+const GYM_DAY_KEYS = ['day1','day2','day3','day4','day5','rest'];
+
 // ── STATE ──
 function loadState() { try { return JSON.parse(localStorage.getItem('glowgo_v3') || '{}'); } catch { return {}; } }
 function saveState(s) { localStorage.setItem('glowgo_v3', JSON.stringify(s)); }
@@ -479,6 +558,8 @@ function getDay(date) {
   if (!d.fitness) d.fitness = {};
   if (!d.water) d.water = { bottles:0, schedule:{} };
   if (!d.water.schedule) d.water.schedule = {};
+  if (!d.gym) d.gym = { selectedDay: null, checks: {}, restWalked: false };
+  if (!d.gym.checks) d.gym.checks = {};
   return d;
 }
 function setDay(date, data) { const s = loadState(); if (!s.days) s.days = {}; s.days[date] = data; saveState(s); }
@@ -503,7 +584,7 @@ function switchTab(tab, e) {
   if (e && e.currentTarget) e.currentTarget.classList.add('active');
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'history') renderHistory();
-  if (tab === 'fitness') renderWeekFitness();
+  if (tab === 'fitness') { renderWeekFitness(); renderGymTabs(); renderGymSplit(); }
   if (tab === 'water') renderWater();
 }
 
@@ -707,6 +788,127 @@ function renderWeekFitness() {
     </div>`).join('');
 }
 
+// ── GYM SPLIT ──
+function renderGymTabs() {
+  const container = document.getElementById('gymDayTabs');
+  const day = getDay(TODAY);
+  const selected = day.gym.selectedDay;
+  container.innerHTML = '';
+  GYM_DAY_KEYS.forEach(key => {
+    const b = document.createElement('button');
+    const isRest = key === 'rest';
+    b.className = 'gym-day-btn' + (isRest ? ' rest' : '') + (key === selected ? ' active' : '');
+    b.textContent = isRest ? '😌 Rest Day' : `${GYM_SPLIT[key].label}`;
+    b.title = isRest ? 'Rest Day — walk 10k anyway' : GYM_SPLIT[key].title;
+    b.onclick = () => selectGymDay(key);
+    container.appendChild(b);
+  });
+}
+
+function selectGymDay(key) {
+  const day = getDay(TODAY);
+  day.gym.selectedDay = key;
+  setDay(TODAY, day);
+  renderGymTabs();
+  renderGymSplit();
+}
+
+function renderGymSplit() {
+  const day = getDay(TODAY);
+  const selected = day.gym.selectedDay;
+  const listEl = document.getElementById('gym-list');
+  const restEl = document.getElementById('gym-rest-card');
+  const completeBtn = document.getElementById('gymCompleteAllBtn');
+  const resetBtn = document.getElementById('gymResetBtn');
+  const barWrap = document.getElementById('gymBarWrap');
+  const congrats = document.getElementById('gymCongrats');
+  const progressEl = document.getElementById('gymProgress');
+
+  if (!selected) {
+    listEl.innerHTML = '<div class="empty-state" style="padding:20px"><span class="emoji">🏋️</span>Pick today\'s gym day above to get started!</div>';
+    restEl.innerHTML = '';
+    completeBtn.style.display = 'none';
+    resetBtn.style.display = 'none';
+    barWrap.style.display = 'none';
+    congrats.classList.remove('show');
+    progressEl.textContent = '';
+    return;
+  }
+
+  if (selected === 'rest') {
+    listEl.innerHTML = '';
+    completeBtn.style.display = 'none';
+    resetBtn.style.display = 'block';
+    barWrap.style.display = 'none';
+    congrats.classList.remove('show');
+    progressEl.textContent = '';
+    const walked = !!day.gym.restWalked;
+    restEl.innerHTML = `
+      <div class="rest-day-card">
+        <div class="rest-day-emoji">😌</div>
+        <div class="rest-day-title">Rest Day</div>
+        <div class="rest-day-text">No lifting today — let those muscles recover.<br>Walk 10k steps anyway!</div>
+        <button class="rest-walk-btn${walked ? ' done' : ''}" id="restWalkBtn">${walked ? '✓ 10k Steps Walked' : '🚶 Mark 10k Steps Walked'}</button>
+      </div>`;
+    document.getElementById('restWalkBtn').onclick = () => {
+      const d = getDay(TODAY);
+      d.gym.restWalked = !d.gym.restWalked;
+      setDay(TODAY, d);
+      renderGymSplit();
+      updateAllStats();
+    };
+    return;
+  }
+
+  restEl.innerHTML = '';
+  completeBtn.style.display = 'block';
+  resetBtn.style.display = 'block';
+  barWrap.style.display = 'block';
+
+  const split = GYM_SPLIT[selected];
+  const checks = day.gym.checks;
+  listEl.innerHTML = '';
+  split.exercises.forEach(ex => {
+    const done = !!checks[ex.id];
+    const el = document.createElement('div');
+    el.className = `check-item gym-item${done ? ' done' : ''}`;
+    el.innerHTML = `<div class="check-box">${done ? '✓' : ''}</div><div class="check-content"><div class="check-name">${ex.name}</div><span class="step-badge">${ex.sets}</span></div>`;
+    el.onclick = () => {
+      const d = getDay(TODAY);
+      d.gym.checks[ex.id] = !d.gym.checks[ex.id];
+      setDay(TODAY, d);
+      renderGymSplit();
+      updateAllStats();
+    };
+    listEl.appendChild(el);
+  });
+
+  const doneCount = split.exercises.filter(ex => checks[ex.id]).length;
+  const total = split.exercises.length;
+  document.getElementById('gymBar').style.width = ((doneCount/total)*100) + '%';
+  progressEl.textContent = `${split.title} · ${doneCount}/${total}`;
+  if (doneCount === total) congrats.classList.add('show'); else congrats.classList.remove('show');
+}
+
+function completeAllGym() {
+  const day = getDay(TODAY);
+  const selected = day.gym.selectedDay;
+  if (!selected || selected === 'rest') return;
+  GYM_SPLIT[selected].exercises.forEach(ex => { day.gym.checks[ex.id] = true; });
+  setDay(TODAY, day);
+  renderGymSplit();
+  updateAllStats();
+}
+
+function resetGym() {
+  const day = getDay(TODAY);
+  day.gym.checks = {};
+  day.gym.restWalked = false;
+  setDay(TODAY, day);
+  renderGymSplit();
+  updateAllStats();
+}
+
 // ── STATS ──
 function updateAllStats() {
   const s = loadState();
@@ -776,6 +978,15 @@ function renderHistory() {
     const wBottles = (d.water || {}).bottles || 0;
     const mDone = mCount === MORNING_STEPS.length, nDone = nCount === NIGHT_STEPS.length, wDone = wBottles >= BOTTLE_FILLS;
     const date = new Date(key + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+    const gym = d.gym || {};
+    let gymPill = '';
+    if (gym.selectedDay === 'rest') {
+      gymPill = gym.restWalked ? '<span class="history-pill pill-gym">😌 Rest · 10k ✓</span>' : '<span class="history-pill pill-gym">😌 Rest Day</span>';
+    } else if (gym.selectedDay && GYM_SPLIT[gym.selectedDay]) {
+      const split = GYM_SPLIT[gym.selectedDay];
+      const gDone = split.exercises.filter(ex => (gym.checks || {})[ex.id]).length;
+      gymPill = `<span class="history-pill pill-gym">🏋️ ${split.label} ${gDone}/${split.exercises.length}</span>`;
+    }
     const el = document.createElement('div');
     el.className = 'history-entry';
     el.innerHTML = `<div class="history-date">${date}</div><div class="history-pills">
@@ -783,6 +994,7 @@ function renderHistory() {
       ${nDone ? '<span class="history-pill pill-night">🌙 PM ✓</span>' : nCount > 0 ? `<span class="history-pill pill-night">🌙 ${nCount}/${NIGHT_STEPS.length}</span>` : '<span class="history-pill pill-miss">🌙 Skip</span>'}
       ${fCount > 0 ? `<span class="history-pill pill-fitness">💪 ${fCount}/${FITNESS_STEPS.length}</span>` : ''}
       ${wDone ? '<span class="history-pill pill-water">💧 5L ✓</span>' : wBottles > 0 ? `<span class="history-pill pill-water">💧 ${(wBottles*40*0.0295735).toFixed(1)}L</span>` : ''}
+      ${gymPill}
     </div>`;
     container.appendChild(el);
   });
@@ -793,6 +1005,8 @@ renderRoutine('morning', MORNING_STEPS, 'morning-list');
 renderRoutine('night', NIGHT_STEPS, 'night-list');
 renderFitnessRoutine();
 renderWorkoutTypes();
+renderGymTabs();
+renderGymSplit();
 renderWater();
 updateAllStats();
 
